@@ -1,0 +1,17 @@
+body {
+  margin: 100px;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.picture, .info {
+  display: inline-block;
+}
+
+.picture {
+  float: left;
+  height: 300px;
+}
+
+.user .info {
+  margin-left: 10px;
+}

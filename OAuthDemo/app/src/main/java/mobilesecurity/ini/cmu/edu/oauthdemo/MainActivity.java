@@ -14,10 +14,7 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
-/**
- * Created by agadgil on 11/9/15.
- */
-public class MainActivity extends Activity{
+public class MainActivity extends Activity {
 
     Button selectDomain;
     TextView tagDetected;
@@ -27,14 +24,13 @@ public class MainActivity extends Activity{
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        selectDomain = (Button)findViewById(R.id.button_main_select_domain);
-        tagDetected = (TextView)findViewById(R.id.textView_main_tag);
+        selectDomain = (Button) findViewById(R.id.button_main_select_domain);
+        tagDetected = (TextView) findViewById(R.id.textView_main_tag);
         selectDomain.setVisibility(View.INVISIBLE);
 
         nfcAdapter = NfcAdapter.getDefaultAdapter(this);
-
     }
+
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
@@ -42,17 +38,13 @@ public class MainActivity extends Activity{
         if (intent.hasExtra(NfcAdapter.EXTRA_TAG)) {
             Toast.makeText(this, "NfcIntent detected!", Toast.LENGTH_SHORT).show();
 
-
             NdefMessage ndefMessage = this.getNdefMessageFromIntent(intent);
 
-            if(ndefMessage.getRecords().length > 0){
-
+            if (ndefMessage.getRecords().length > 0) {
                 NdefRecord ndefRecord = ndefMessage.getRecords()[0];
-
                 String payload = new String(ndefRecord.getPayload());
 
-                //Toast.makeText(this, payload, Toast.LENGTH_SHORT).show();
-                tagDetected.setText("Valid tag found: "+payload);
+                tagDetected.setText("Valid tag found: " + payload);
                 selectDomain.setVisibility(View.VISIBLE);
 
                 selectDomain.setOnClickListener(new View.OnClickListener() {
@@ -90,9 +82,6 @@ public class MainActivity extends Activity{
     @Override
     protected void onPause() {
         super.onPause();
-
         nfcAdapter.disableForegroundDispatch(this);
     }
-
-
 }

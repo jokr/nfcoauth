@@ -1,2 +1,8 @@
-.idea/*
+.idea/
+.gradle/
+build/
+*.iml
 *.class
+local.properties
+node_modules
+.remote-sync.json

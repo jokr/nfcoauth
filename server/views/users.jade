@@ -1,0 +1,20 @@
+html(lang="en")
+  head
+    link(rel='stylesheet', href='style.css')
+    title NFC OAuth
+    
+  body
+    h1 Logged in users
+    if users.length
+      p The following users are logged in.
+      
+      each user in users
+        .user
+          div.picture
+            img(src="#{user.picture.data.url}")
+          div.info
+            strong= user.name
+            div= user.id
+            div= moment(user.updatedAt).fromNow()
+    else
+      p Currently there are no users logged in.  

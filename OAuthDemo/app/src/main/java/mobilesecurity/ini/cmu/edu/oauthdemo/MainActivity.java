@@ -1,81 +1,98 @@
 package mobilesecurity.ini.cmu.edu.oauthdemo;
 
+import android.app.Activity;
+import android.app.PendingIntent;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.nfc.NdefMessage;
+import android.nfc.NdefRecord;
+import android.nfc.NfcAdapter;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
-import android.view.Menu;
-import android.view.MenuItem;
+import android.os.Parcelable;
+import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import com.facebook.CallbackManager;
-import com.facebook.FacebookCallback;
-import com.facebook.FacebookException;
-import com.facebook.FacebookSdk;
-import com.facebook.login.LoginResult;
-import com.facebook.login.widget.LoginButton;
+/**
+ * Created by agadgil on 11/9/15.
+ */
+public class MainActivity extends Activity{
 
-public class MainActivity extends AppCompatActivity {
-    private TextView info;
-    private LoginButton loginButton;
-    private CallbackManager callbackManager;
+    Button selectDomain;
+    TextView tagDetected;
+    NfcAdapter nfcAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        FacebookSdk.sdkInitialize(getApplicationContext());
-        callbackManager = CallbackManager.Factory.create();
         setContentView(R.layout.activity_main);
-        info = (TextView)findViewById(R.id.info);
-        loginButton = (LoginButton)findViewById(R.id.login_button);
 
-        loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
-            @Override
-            public void onSuccess(LoginResult loginResult) {
-                info.setText(
-                        "User ID: "
-                                + loginResult.getAccessToken().getUserId()
-                                + "\n" +
-                                "Auth Token: "
-                                + loginResult.getAccessToken().getToken()
-                );
-            }
+        selectDomain = (Button)findViewById(R.id.button_main_select_domain);
+        tagDetected = (TextView)findViewById(R.id.textView_main_tag);
+        selectDomain.setVisibility(View.INVISIBLE);
 
-            @Override
-            public void onCancel() {
-                info.setText("Login attempt canceled.");
-            }
+        nfcAdapter = NfcAdapter.getDefaultAdapter(this);
 
-            @Override
-            public void onError(FacebookException e) {
-                info.setText("Login attempt failed.");
-            }
-        });
     }
-
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
+        if (intent.hasExtra(NfcAdapter.EXTRA_TAG)) {
+            Toast.makeText(this, "NfcIntent detected!", Toast.LENGTH_SHORT).show();
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
+
+            NdefMessage ndefMessage = this.getNdefMessageFromIntent(intent);
+
+            if(ndefMessage.getRecords().length > 0){
+
+                NdefRecord ndefRecord = ndefMessage.getRecords()[0];
+
+                String payload = new String(ndefRecord.getPayload());
+
+                //Toast.makeText(this, payload, Toast.LENGTH_SHORT).show();
+                tagDetected.setText("Valid tag found: "+payload);
+                selectDomain.setVisibility(View.VISIBLE);
+
+                selectDomain.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        startActivity(new Intent(MainActivity.this, SelectDomain.class));
+                        finish();
+                    }
+                });
+            }
         }
+    }
 
-        return super.onOptionsItemSelected(item);
+    public NdefMessage getNdefMessageFromIntent(Intent intent) {
+        NdefMessage ndefMessage = null;
+        Parcelable[] extra = intent.getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES);
+
+        if (extra != null && extra.length > 0) {
+            ndefMessage = (NdefMessage) extra[0];
+        }
+        return ndefMessage;
+    }
+
+    protected void onResume() {
+        super.onResume();
+        Intent intent = new Intent(this, MainActivity.class).addFlags(Intent.FLAG_RECEIVER_REPLACE_PENDING);
+
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
+
+        IntentFilter[] intentFilters = new IntentFilter[]{};
+
+        nfcAdapter.enableForegroundDispatch(this, pendingIntent, intentFilters, null);
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        callbackManager.onActivityResult(requestCode, resultCode, data);
+    protected void onPause() {
+        super.onPause();
+
+        nfcAdapter.disableForegroundDispatch(this);
     }
+
+
 }

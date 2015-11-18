@@ -123,4 +123,29 @@ public class MainActivity extends Activity{
         }
 
     }
+        private void formatTag(Tag tag, NdefMessage ndefMessage) {
+        try {
+
+            NdefFormatable ndefFormatable = NdefFormatable.get(tag);
+
+            ;
+
+            if (ndefFormatable == null) {
+                Toast.makeText(this, "Tag is not ndef formatable!", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+
+            ndefFormatable.connect();
+            ndefFormatable.format(ndefMessage);
+            ndefFormatable.close();
+
+            Toast.makeText(this, "Tag writen!", Toast.LENGTH_SHORT).show();
+
+        } catch (Exception e) {
+            Log.e("formatTag", e.getMessage());
+        }
+
+    }
+
 }

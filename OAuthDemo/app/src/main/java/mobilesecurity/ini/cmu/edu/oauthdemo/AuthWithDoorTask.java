@@ -1,5 +1,7 @@
 package mobilesecurity.ini.cmu.edu.oauthdemo;
 
+import android.app.Activity;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.util.Log;
 
@@ -15,6 +17,11 @@ import java.net.URL;
 
 public class AuthWithDoorTask extends AsyncTask<AccessToken, Void, Boolean> {
     private static final String TAG = "AuthWithDoorTask";
+    private final Activity activity;
+
+    public AuthWithDoorTask(Activity activity) {
+        this.activity = activity;
+    }
 
     @Override
     protected Boolean doInBackground(AccessToken... params) {
@@ -52,5 +59,12 @@ public class AuthWithDoorTask extends AsyncTask<AccessToken, Void, Boolean> {
             }
         }
         return true;
+    }
+
+    @Override
+    protected void onPostExecute(Boolean result) {
+        Log.v(TAG, "Finished task, start new activity.");
+        activity.finish();
+        activity.startActivity(new Intent(activity, LoggedInActivity.class));
     }
 }

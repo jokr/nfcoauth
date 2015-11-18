@@ -4,4 +4,8 @@
     <string name="loginCanceled">Login attempt canceled.</string>
     <string name="loginFailed">Login attempt failed.</string>
     <string name="loginSuccess">User ID: %1$s. Token: %2$s.</string>
+    <string name="welcome">Welcome to CMU SV door access!</string>
+    <string name="instruction">Please scan a NFC field.</string>
+    <string name="selectDomain">Please login.</string>
+    <string name="loggedIn">Logged in!</string>
 </resources>

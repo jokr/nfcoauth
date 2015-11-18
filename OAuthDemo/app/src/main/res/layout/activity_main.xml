@@ -1,64 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:orientation="vertical"
-              android:layout_width="match_parent"
-              android:layout_height="match_parent">
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
 
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_gravity="center_horizontal"
-        android:contextClickable="false">
+    <TextView
+        android:id="@+id/textView_main_welcome"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentStart="true"
+        android:background="#6d7eff"
+        android:gravity="center"
+        android:text="@string/welcome"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:textColor="#ffffff"
+        android:padding="15dp" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:text="Welcome to CMU SV door access!"
-            android:id="@+id/textView_main_welcome"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true"
-            android:layout_alignParentRight="true"
-            android:layout_alignParentEnd="true"
-            android:background="#6d7eff"
-            android:gravity="center"
-            android:textColor="#ffffff"/>
+    <Button
+        android:id="@+id/textView_main_tap"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/textView_main_welcome"
+        android:layout_marginTop="34dp"
+        android:background="#6d7eff"
+        android:gravity="center"
+        android:text="@string/instruction"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:textColor="#ffffff"
+        android:padding="15dp"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:text="Please tap your phone against the NFC tag"
-            android:id="@+id/textView_main_tap"
-            android:layout_below="@+id/textView_main_welcome"
-            android:layout_centerHorizontal="true"
-            android:layout_marginTop="34dp"
-            android:gravity="center"
-            android:background="#6d7eff"
-            android:textColor="#ffffff"/>
+    <TextView
+        android:id="@+id/textView_main_tag"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/textView_main_tap"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="102dp"
+        android:textAppearance="?android:attr/textAppearanceLarge" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:id="@+id/textView_main_tag"
-            android:layout_below="@+id/textView_main_tap"
-            android:layout_centerHorizontal="true"
-            android:layout_marginTop="102dp"/>
-
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/button_main_select_domain"
-            android:layout_below="@+id/textView_main_tag"
-            android:layout_marginTop="118dp"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true"
-            android:layout_alignParentRight="true"
-            android:layout_alignParentEnd="true"
-            android:text="Select OAuth Domain"
-            android:background="#6d7eff"
-            android:textColor="#ffffff"/>
-
-    </RelativeLayout>
-</LinearLayout>
+</RelativeLayout>

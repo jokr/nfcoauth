@@ -15,7 +15,7 @@ import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-public class AuthWithDoorTask extends AsyncTask<AccessToken, Void, Boolean> {
+public class AuthWithDoorTask extends AsyncTask<LoginToken, Void, Boolean> {
     private static final String TAG = "AuthWithDoorTask";
     private final Activity activity;
 
@@ -24,7 +24,7 @@ public class AuthWithDoorTask extends AsyncTask<AccessToken, Void, Boolean> {
     }
 
     @Override
-    protected Boolean doInBackground(AccessToken... params) {
+    protected Boolean doInBackground(LoginToken... params) {
         if (params.length != 1) {
             return null;
         }
@@ -40,7 +40,8 @@ public class AuthWithDoorTask extends AsyncTask<AccessToken, Void, Boolean> {
             urlConnection.connect();
 
             JSONObject user = new JSONObject();
-            user.put("userId", params[0].getUserId());
+            // ToDO Update the userId Field
+            user.put("userId", params[0].getToken());
             user.put("token", params[0].getToken());
 
             Log.v(TAG, "Prepare post: " + user.toString());

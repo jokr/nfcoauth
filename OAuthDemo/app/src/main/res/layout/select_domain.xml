@@ -23,14 +23,26 @@
         android:layout_height="wrap_content"
         android:layout_below="@+id/textView_domain_instruction"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="25dp" />
+        android:layout_marginTop="25dp"
+        />
+    
+    <com.google.android.gms.common.SignInButton
+        android:id="@+id/button_domain_google"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/button_domain_facebook"
+        android:layout_marginTop="25dp"
+        android:layout_centerInParent="true"
+        android:visibility="visible" />
 
     <Button
-        android:id="@+id/button_domain_google"
+        android:id="@+id/button_unlock"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/button_domain_facebook"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="25dp"
-        android:text="Google" />
+        android:text="Unlock Door"
+        android:visibility="invisible"/>
+
 </RelativeLayout>

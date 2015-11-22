@@ -61,6 +61,7 @@ public class MainActivity extends Activity {
                 Toast.makeText(this, "Valid tag found: " + payload, Toast.LENGTH_SHORT).show();
                 startActivity(new Intent(MainActivity.this, SelectDomain.class));
                 finish();
+
             }
         }
     }

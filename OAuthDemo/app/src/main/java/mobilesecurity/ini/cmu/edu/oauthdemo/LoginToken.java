@@ -43,6 +43,16 @@ public class LoginToken {
     }
 
     enum LoginType {
-        FACEBOOK, GOOGLE
+        FACEBOOK("Facebook"), GOOGLE("Google");
+        private String text;
+
+        private LoginType(String text) {
+            this.text = text;
+        }
+
+        @Override
+        public String toString() {
+            return this.text;
+        }
     }
 }

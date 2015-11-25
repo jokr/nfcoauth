@@ -22,16 +22,16 @@ app.get("/", (req, res, next) => {
 
 app.post("/auth", (req, res, next) => {
   request(
-    "https://graph.facebook.com/v2.5/me?fields=id,name,picture&access_token=" + req.body.token,
+    getAuthURL(req.body.logintype) + req.body.token,
     (error, response, body) => {
       if (error) {
-        console.warning(error);
+        console.warn(error);
         res.status(500).send("Error.");
         return;
       }
 
       if (response.statusCode !== 200) {
-        console.warning(body);
+        console.warn(body);
         res.status(500).send("Error.");
         return;
       }
@@ -48,3 +48,13 @@ app.use((req, res, next) => {
 
 var server = http.createServer(app);
 server.listen(8090);
+
+function getAuthURL(logintype) {
+  switch(logintype) {
+    case 'Facebook':
+      return 'https://graph.facebook.com/v2.5/me?fields=id,name,picture&access_token=';
+    case 'Google':
+      return 'https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=';
+  }
+  return undefined
+}

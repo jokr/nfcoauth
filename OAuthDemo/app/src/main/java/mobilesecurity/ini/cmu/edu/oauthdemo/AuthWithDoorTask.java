@@ -32,6 +32,7 @@ public class AuthWithDoorTask extends AsyncTask<LoginToken, Void, Boolean> {
         HttpURLConnection urlConnection = null;
         try {
             URL url = new URL("http://10.0.13.179:8090/auth");
+            //URL url = new URL("http://172.29.93.2:8090/auth");
             Log.v(TAG, "Prepare connection: " + url.toString());
             urlConnection = (HttpURLConnection) url.openConnection();
             urlConnection.setRequestMethod("POST");
@@ -41,8 +42,9 @@ public class AuthWithDoorTask extends AsyncTask<LoginToken, Void, Boolean> {
 
             JSONObject user = new JSONObject();
             // ToDO Update the userId Field
-            user.put("userId", params[0].getToken());
+            user.put("userId", "");
             user.put("token", params[0].getToken());
+            user.put("logintype", params[0].getLoginType());
 
             Log.v(TAG, "Prepare post: " + user.toString());
 

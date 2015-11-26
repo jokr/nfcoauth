@@ -5,7 +5,7 @@ var morgan = require("morgan");
 var path = require("path");
 var request = require("request");
 var users = require("./users");
-
+var groups = require("./googlegroups")
 var app = express();
 
 app.locals.moment = require("moment");
@@ -35,9 +35,7 @@ app.post("/auth", (req, res, next) => {
         res.status(500).send("Error.");
         return;
       }
-
-      users.addUser(JSON.parse(body))
-      res.status(200).send("Success.");
+      handleOAuthReponse(req.body.logintype, res, JSON.parse(body));     
     }
   );
 });
@@ -48,6 +46,20 @@ app.use((req, res, next) => {
 
 var server = http.createServer(app);
 server.listen(8090);
+
+function handleOAuthReponse(logintype, res, body) {
+  switch(logintype) {
+    case 'Facebook':
+      users.addUser(body);
+      res.status(200).send("Success.");
+      break;
+    case 'Google':
+      if(groups.checkMembership(res, body.email)) {
+        users.addUser(body);
+      }
+      break;
+  }
+}
 
 function getAuthURL(logintype) {
   switch(logintype) {

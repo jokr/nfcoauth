@@ -8,16 +8,51 @@ var TOKEN_DIR = (process.env.HOME || process.env.HOMEPATH ||
     process.env.USERPROFILE) + '/.credentials/';
 var TOKEN_PATH = TOKEN_DIR + 'admin-directory_v1-nodejs-quickstart.json';
 
-// Load client secrets from a local file.
-fs.readFile('client_secret.json', function processClientSecrets(err, content) {
-  if (err) {
-    console.log('Error loading client secret file: ' + err);
-    return;
-  }
-  // Authorize a client with the loaded credentials, then call the
-  // Directory API.
-  authorize(JSON.parse(content), listUsers);
-});
+
+function checkMembership(res, email) {
+  var result = false;
+  fs.readFile('client_secret.json', function processClientSecrets(err, content) {
+    if (err) {
+      console.log('Error loading client secret file: ' + err);
+      res.status(500).send("Server Error.");
+      return;
+    }
+    // Authorize a client with the loaded credentials, then call the
+    // Directory API.
+    authorize(JSON.parse(content), function(auth) {
+      var service = google.admin('directory_v1');
+      service.users.list({
+        auth: auth,
+        customer: 'my_customer',
+        orderBy: 'email'
+      }, function(err, response) {
+        if (err) {
+          console.log('The API returned an error: ' + err)
+          res.status(500).send("Server Error.");
+          return;
+        }
+        var users = response.users;
+        if (users.length == 0) {
+          console.log('No users in the domain.');
+          res.status(500).send("Server Error.");
+        } else {
+          for (var i = 0; i < users.length; i++) {
+            var user = users[i];
+            if(user.primaryEmail === email){ 
+              console.log('Success.');
+              res.status(200).send('Success.');
+              result = true;
+              return;
+            }
+          }
+          console.log('Access Denied');
+          res.status(403).send('Access Denied');
+        }
+      });
+    });
+  });
+  return result;
+}
 
 /**
  * Create an OAuth2 client with the given credentials, and then execute the
@@ -93,32 +128,4 @@ function storeToken(token) {
   console.log('Token stored to ' + TOKEN_PATH);
 }
 
-/**
- * Lists the first 10 users in the domain.
- *
- * @param {google.auth.OAuth2} auth An authorized OAuth2 client.
- */
-function listUsers(auth) {
-  var service = google.admin('directory_v1');
-  service.users.list({
-    auth: auth,
-    customer: 'my_customer',
-    maxResults: 10,
-    orderBy: 'email'
-  }, function(err, response) {
-    if (err) {
-      console.log('The API returned an error: ' + err);
-      return;
-    }
-    var users = response.users;
-    if (users.length == 0) {
-      console.log('No users in the domain.');
-    } else {
-      console.log('Users:');
-      for (var i = 0; i < users.length; i++) {
-        var user = users[i];
-        console.log('%s (%s)', user.primaryEmail, user.name.fullName);
-      }
-    }
-  });
-}
+exports.checkMembership = checkMembership

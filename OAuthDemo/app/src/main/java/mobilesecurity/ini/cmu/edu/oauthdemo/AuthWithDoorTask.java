@@ -31,8 +31,8 @@ public class AuthWithDoorTask extends AsyncTask<LoginToken, Void, Boolean> {
 
         HttpURLConnection urlConnection = null;
         try {
-            URL url = new URL("http://10.0.13.179:8090/auth");
-            //URL url = new URL("http://172.29.93.2:8090/auth");
+            //URL url = new URL("http://10.0.0.212:8090/auth");
+            URL url = new URL("http://172.29.93.2:8090/auth");
             Log.v(TAG, "Prepare connection: " + url.toString());
             urlConnection = (HttpURLConnection) url.openConnection();
             urlConnection.setRequestMethod("POST");

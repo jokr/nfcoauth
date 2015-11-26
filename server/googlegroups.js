@@ -4,9 +4,10 @@ var google = require('googleapis');
 var googleAuth = require('google-auth-library');
 
 var SCOPES = ['https://www.googleapis.com/auth/admin.directory.user'];
-var TOKEN_DIR = (process.env.HOME || process.env.HOMEPATH ||
-    process.env.USERPROFILE) + '/.credentials/';
-var TOKEN_PATH = TOKEN_DIR + 'admin-directory_v1-nodejs-quickstart.json';
+//var TOKEN_DIR = (process.env.HOME || process.env.HOMEPATH ||
+//    process.env.USERPROFILE) + '/.credentials/';
+//var TOKEN_PATH = TOKEN_DIR + 'admin-directory_v1-nodejs-quickstart.json';
+var TOKEN_PATH = './token.json';
 
 
 function checkMembership(res, email) {

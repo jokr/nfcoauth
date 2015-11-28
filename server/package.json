@@ -11,6 +11,8 @@
   "dependencies": {
     "body-parser": "^1.14.1",
     "express": "^4.13.3",
+    "google-auth-library": "^0.9.7",
+    "googleapis": "^2.1.6",
     "jade": "^1.11.0",
     "moment": "^2.10.6",
     "morgan": "^1.6.1",

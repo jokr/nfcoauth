@@ -8,4 +8,7 @@
     <string name="instruction">Please scan a NFC field.</string>
     <string name="selectDomain">Please login.</string>
     <string name="loggedIn">Logged in!</string>
+    <string name="formatNdef">Format a tag to NDEF</string>
+    <string name="url_label">Please enter a url.</string>
+    <string name="defaultServer">http://10.0.0.212:8090/auth</string>
 </resources>

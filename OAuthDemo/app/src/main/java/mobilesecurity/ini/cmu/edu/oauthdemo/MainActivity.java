@@ -77,6 +77,7 @@ public class MainActivity extends Activity {
         return ndefMessage;
     }
 
+    @Override
     protected void onResume() {
         super.onResume();
         if (nfcAdapter == null) {

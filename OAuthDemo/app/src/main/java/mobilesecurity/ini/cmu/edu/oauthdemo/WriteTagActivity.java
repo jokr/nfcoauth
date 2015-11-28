@@ -63,17 +63,17 @@ public class WriteTagActivity extends Activity {
             Toast.makeText(this, "Please enter a url first.", Toast.LENGTH_SHORT).show();
             return;
         }
-        byte[] payload = urlMsg.getBytes(StandardCharsets.UTF_8);
+        byte[] payload = (urlMsg + "\n").getBytes(StandardCharsets.UTF_8);
 
         Tag tag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
         Log.v(TAG, tag.toString());
         List<String> tech = Arrays.asList(tag.getTechList());
 
-        if (tech.contains(NdefFormatable.class.getName())) {
-            Toast.makeText(this, "Write NDEF.", Toast.LENGTH_SHORT).show();
-            write(NdefFormatable.get(tag), payload);
-            return;
-        }
+//        if (tech.contains(NdefFormatable.class.getName())) {
+//            Toast.makeText(this, "Write NDEF.", Toast.LENGTH_SHORT).show();
+//            write(NdefFormatable.get(tag), payload);
+//            return;
+//        }
 
         if (tech.contains(MifareUltralight.class.getName())) {
             Toast.makeText(this, "Write to Mifare Ultralight.", Toast.LENGTH_SHORT).show();

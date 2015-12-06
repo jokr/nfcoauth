@@ -4,9 +4,9 @@ html(lang="en")
     title NFC OAuth
     
   body
-    h1 Logged in users
+    h1 CMU Access Door
     if users.length
-      p The following users are logged in.
+      p The following users accessed the door successfully.
       
       each user in users
         .user
@@ -17,4 +17,4 @@ html(lang="en")
             div= user.id
             div= moment(user.updatedAt).fromNow()
     else
-      p Currently there are no users logged in.  
+      p Currently no users were granted access.  

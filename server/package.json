@@ -1,21 +1,21 @@
 {
-  "name": "nfcoauth",
-  "version": "1.0.0",
-  "description": "A dummy server for the NFC OAuth project.",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "author": "Joel Krebs <joel.krebs@gmail.com> (www.aleaiactaest.ch)",
-  "license": "MIT",
-  "dependencies": {
-    "body-parser": "^1.14.1",
-    "express": "^4.13.3",
-    "google-auth-library": "^0.9.7",
-    "googleapis": "^2.1.6",
-    "jade": "^1.11.0",
-    "moment": "^2.10.6",
-    "morgan": "^1.6.1",
-    "request": "^2.65.0"
-  }
+	"name": "nfcoauth",
+	"version": "1.0.0",
+	"description": "A dummy server for the NFC OAuth project.",
+	"main": "index.js",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"author": "Joel Krebs <joel.krebs@gmail.com> (www.aleaiactaest.ch)",
+	"license": "MIT",
+	"dependencies": {
+		"body-parser": "^1.14.1",
+		"express": "^4.13.3",
+		"google-auth-library": "^0.9.7",
+		"googleapis": "^2.1.6",
+		"jade": "^1.11.0",
+		"moment": "^2.10.6",
+		"morgan": "^1.6.1",
+		"request": "^2.65.0"
+	}
 }

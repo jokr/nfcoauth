@@ -11,24 +11,36 @@ import android.nfc.NfcAdapter;
 import android.nfc.Tag;
 import android.nfc.tech.MifareClassic;
 import android.nfc.tech.MifareUltralight;
-import android.nfc.tech.Ndef;
 import android.nfc.tech.NdefFormatable;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.security.InvalidKeyException;
+import java.security.KeyFactory;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.Signature;
+import java.security.SignatureException;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Arrays;
 import java.util.List;
 
 public class WriteTagActivity extends Activity {
     private static final String TAG = "WriteTagActivity";
     private static final int MIFARE_ULTRALIGHT_SIZE_LIMIT = 48; // bytes, 12 pages a 4 bytes
+    private static final String NONCE = "dl63b42ffql7ht4"; // dynamic in prod
 
     private NfcAdapter nfcAdapter;
     private EditText url;
+    private PrivateKey privateKey;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,6 +50,16 @@ public class WriteTagActivity extends Activity {
 
         setContentView(R.layout.activity_write_tag);
         url = (EditText) findViewById(R.id.url);
+
+        try {
+            privateKey = readPrivateKey();
+            Log.v(TAG, privateKey.toString());
+        } catch (NoSuchAlgorithmException | IOException | InvalidKeySpecException e) {
+            e.printStackTrace();
+            Toast.makeText(this, "Error reading private key.", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
 
         nfcAdapter = NfcAdapter.getDefaultAdapter(this);
 
@@ -63,28 +85,55 @@ public class WriteTagActivity extends Activity {
             Toast.makeText(this, "Please enter a url first.", Toast.LENGTH_SHORT).show();
             return;
         }
-        byte[] payload = (urlMsg + "\n").getBytes(StandardCharsets.UTF_8);
+
+        if (urlMsg.startsWith("http://")) {
+            urlMsg = urlMsg.substring(7);
+        }
+
+        urlMsg += "\n";
+
+        if (urlMsg.length() > 28) {
+            Toast.makeText(this, "Message is too long.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        byte[] message = new byte[32];
+        System.arraycopy(urlMsg.getBytes(StandardCharsets.UTF_8), 0, message, 0, urlMsg.length());
+        System.arraycopy(NONCE.getBytes(StandardCharsets.UTF_8), 0, message, urlMsg.length(), 32 - urlMsg.length());
+        Log.v(TAG, "Message: " + Arrays.toString(message));
+
+        byte[] digest;
+        try {
+            digest = genDigest(message, 5);
+            Log.v(TAG, "Digest: " + Arrays.toString(digest));
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+            Toast.makeText(this, "Error when generating digest.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        byte[] signature;
+        try {
+            signature = genSignature(digest);
+            Log.v(TAG, "Signature: " + Arrays.toString(signature));
+        } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
+            e.printStackTrace();
+            Toast.makeText(this, "Error when signing hash.", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
         Tag tag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
         Log.v(TAG, tag.toString());
         List<String> tech = Arrays.asList(tag.getTechList());
 
-//        if (tech.contains(NdefFormatable.class.getName())) {
-//            Toast.makeText(this, "Write NDEF.", Toast.LENGTH_SHORT).show();
-//            write(NdefFormatable.get(tag), payload);
-//            return;
-//        }
-
         if (tech.contains(MifareUltralight.class.getName())) {
+            byte[] payload = new byte[MIFARE_ULTRALIGHT_SIZE_LIMIT];
+            Arrays.fill(payload, (byte) 0);
+            System.arraycopy(message, 0, payload, 0, 32);
+            System.arraycopy(signature, 0, payload, 32, 16);
+
             Toast.makeText(this, "Write to Mifare Ultralight.", Toast.LENGTH_SHORT).show();
-            clearTag(MifareUltralight.get(tag));
             write(MifareUltralight.get(tag), payload);
-            return;
-        }
-
-        if (tech.contains(MifareUltralight.class.getName())) {
-            Toast.makeText(this, "Write to Mifare Classic.", Toast.LENGTH_SHORT).show();
-            write(MifareClassic.get(tag), payload);
             return;
         }
 
@@ -168,7 +217,7 @@ public class WriteTagActivity extends Activity {
         Intent intent = new Intent(this, getClass()).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
         IntentFilter intentFilter = new IntentFilter(NfcAdapter.ACTION_TAG_DISCOVERED);
-        IntentFilter[] intentFilters = new IntentFilter[]{};
+        IntentFilter[] intentFilters = new IntentFilter[]{intentFilter};
         nfcAdapter.enableForegroundDispatch(this, pendingIntent, intentFilters, null);
     }
 
@@ -185,5 +234,36 @@ public class WriteTagActivity extends Activity {
         Log.v(TAG, "onNewIntent called");
         Log.v(TAG, intent.toString());
         handleTag(intent);
+    }
+
+    private PrivateKey readPrivateKey() throws NoSuchAlgorithmException, IOException, InvalidKeySpecException {
+        ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
+        InputStream input = this.getResources().openRawResource(R.raw.privatekey);
+        int b;
+        while((b = input.read()) != -1) {
+            byteStream.write(b);
+        }
+
+        PKCS8EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(byteStream.toByteArray());
+        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+        return keyFactory.generatePrivate(privateKeySpec);
+    }
+
+    private byte[] genSignature(byte[] hash) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+        Signature signature = Signature.getInstance("NONEwithRSA");
+        signature.initSign(privateKey);
+        signature.update(hash);
+        return signature.sign();
+    }
+
+    private byte[] genDigest(byte[] message, int length) throws NoSuchAlgorithmException {
+        MessageDigest m = MessageDigest.getInstance("SHA-256");
+        m.update(message);
+        if (length == 0) {
+            return m.digest();
+        }
+        byte[] digest = new byte[length];
+        System.arraycopy(m.digest(), 0, digest, 0, digest.length);
+        return digest;
     }
 }

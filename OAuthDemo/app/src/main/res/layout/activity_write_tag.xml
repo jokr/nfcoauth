@@ -23,7 +23,8 @@
         android:id="@+id/url_label"
         android:keepScreenOn="false"
         android:labelFor="@+id/url"
-        android:layout_marginTop="15dp" />
+        android:layout_marginTop="15dp"
+        android:padding="10dp" />
 
     <EditText
         android:layout_width="match_parent"
@@ -31,6 +32,7 @@
         android:id="@+id/url"
         android:inputType="textUri"
         android:layout_marginTop="15dp"
-        android:text="@string/defaultServer" />
+        android:text="@string/defaultServer"
+        android:padding="10dp" />
 
 </LinearLayout>

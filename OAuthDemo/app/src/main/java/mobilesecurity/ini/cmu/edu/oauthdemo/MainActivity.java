@@ -6,23 +6,30 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.nfc.FormatException;
 import android.nfc.NdefMessage;
-import android.nfc.NdefRecord;
 import android.nfc.NfcAdapter;
 import android.nfc.Tag;
 import android.nfc.tech.MifareUltralight;
 import android.nfc.tech.Ndef;
 import android.os.Bundle;
-import android.os.Parcelable;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.TextView;
 import android.widget.Toast;
 
-import com.facebook.login.widget.LoginButton;
-
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
+import java.io.InputStream;
+import java.nio.ByteBuffer;
+import java.security.InvalidKeyException;
+import java.security.KeyFactory;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
+import java.security.Signature;
+import java.security.SignatureException;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
 import java.util.Arrays;
 import java.util.List;
 
@@ -31,12 +38,23 @@ public class MainActivity extends Activity {
     private static final int MIFARE_ULTRALIGHT_SIZE_LIMIT = 48; // bytes, 12 pages a 4 bytes
 
     private NfcAdapter nfcAdapter;
+    private PublicKey publicKey;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Button simulateScan = (Button) findViewById(R.id.textView_main_tap);
+
+        try {
+            publicKey = readPublicKey();
+            Log.v(TAG, publicKey.toString());
+        } catch (NoSuchAlgorithmException | IOException | InvalidKeySpecException e) {
+            e.printStackTrace();
+            Toast.makeText(this, "Error reading public key.", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
 
         nfcAdapter = NfcAdapter.getDefaultAdapter(this);
         if (nfcAdapter == null) {
@@ -52,54 +70,25 @@ public class MainActivity extends Activity {
 
     private void handleTag(Tag tag) {
         Log.v(TAG, tag.toString());
-        List<String> tech = Arrays.asList(tag.getTechList());
 
-        if (tech.contains(Ndef.class.getName())) {
-            Log.v(TAG, "Read formatted tag.");
-            try {
-                NdefMessage message = Ndef.get(tag).getNdefMessage();
-                if (message.getRecords().length == 0) {
-                    Toast.makeText(this, "Empty tag found.", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                String payload = new String(message.getRecords()[0].getPayload());
-                login(payload);
-            } catch (FormatException | IOException e) {
-                Log.e(TAG, e.getMessage(), e);
-                Toast.makeText(this, "Error while reading ndef tag.", Toast.LENGTH_SHORT).show();
+        try {
+            byte[] payload = readTag(tag);
+            if (payload.length < 32) {
+                throw new ReadingTagException("Payload shorter than 32 bytes.");
             }
-        } else if (tech.contains(MifareUltralight.class.getName())) {
-            Log.v(TAG, "Read Mifare ultralight tag.");
-            MifareUltralight mifareUltralight = MifareUltralight.get(tag);
-            byte[] payload = new byte[MIFARE_ULTRALIGHT_SIZE_LIMIT];
-            try {
-                mifareUltralight.connect();
-                for (int i = 4; i < 16; i++) {
-                    System.arraycopy(
-                            mifareUltralight.readPages(i),
-                            0,
-                            payload,
-                            (i - 4) * 4,
-                            4
-                    );
-                }
-            } catch (IOException e) {
-                Toast.makeText(this, "Error while reading mifare ultralight tag.", Toast.LENGTH_SHORT).show();
-                return;
-            } finally {
-                try {
-                    mifareUltralight.close();
-                } catch (IOException e) {
-                    Toast.makeText(this, "Error while reading mifare ultralight tag.", Toast.LENGTH_SHORT).show();
-                }
+            String url = readUrlFromPayload(payload);
+            Log.v(TAG, "URL: " + url);
+            String nonce = readNonceFromPayload(payload, url.length());
+            Log.v(TAG, "Nonce: " + nonce);
+            boolean verified = verifySignature(payload);
+            Log.v(TAG, "Verified: " + verified);
+            if (!verified) {
+                throw new ReadingTagException("Verifiacation of signature failed.");
             }
-            for(int i = 0; i < payload.length; i++) {
-                if (payload[i] == (byte) 0x0A) {
-                    login(new String(Arrays.copyOfRange(payload, 0, i), StandardCharsets.UTF_8));
-                    return;
-                }
-            }
-            Toast.makeText(this, "No newline character found.", Toast.LENGTH_SHORT).show();
+            login(url);
+        } catch (Exception e) {
+            Log.e(TAG, e.getMessage(), e);
+            Toast.makeText(this, "Error while reading tag.", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -121,17 +110,6 @@ public class MainActivity extends Activity {
         }
     }
 
-    public NdefMessage getNdefMessageFromIntent(Intent intent) {
-        NdefMessage ndefMessage = null;
-        Parcelable[] extra = intent.getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES);
-        Log.v(TAG, "Extra: " + Arrays.toString(extra));
-
-        if (extra != null && extra.length > 0) {
-            ndefMessage = (NdefMessage) extra[0];
-        }
-        return ndefMessage;
-    }
-
     @Override
     protected void onResume() {
         super.onResume();
@@ -151,5 +129,94 @@ public class MainActivity extends Activity {
         if (nfcAdapter != null) {
             nfcAdapter.disableForegroundDispatch(this);
         }
+    }
+
+    private byte[] readTag(Tag tag) throws IOException, FormatException, ReadingTagException {
+        List<String> tech = Arrays.asList(tag.getTechList());
+        if (tech.contains(Ndef.class.getName())) {
+            Log.v(TAG, "Read formatted tag.");
+            return readNdeftag(Ndef.get(tag));
+        } else if (tech.contains(MifareUltralight.class.getName())) {
+            Log.v(TAG, "Read Mifare ultralight tag.");
+            return readMifareUltralight(MifareUltralight.get(tag));
+        }
+        Toast.makeText(this, "No supported tag found.", Toast.LENGTH_SHORT).show();
+        Log.e(TAG, "No supported tag found: " + tech);
+        throw new ReadingTagException("No supported tag found.");
+    }
+
+    private byte[] readNdeftag(Ndef tag) throws IOException, FormatException, ReadingTagException {
+        NdefMessage message = tag.getNdefMessage();
+        if (message.getRecords().length == 0) {
+            Toast.makeText(this, "Empty tag found.", Toast.LENGTH_SHORT).show();
+            throw new ReadingTagException("Empty tag.");
+        }
+        return message.getRecords()[0].getPayload();
+    }
+
+    private byte[] readMifareUltralight(MifareUltralight tag) throws IOException {
+        byte[] payload = new byte[MIFARE_ULTRALIGHT_SIZE_LIMIT];
+        try {
+            tag.connect();
+            for (int i = 4; i < 16; i++) {
+                System.arraycopy(
+                        tag.readPages(i),
+                        0,
+                        payload,
+                        (i - 4) * 4,
+                        4
+                );
+            }
+        } finally {
+            tag.close();
+        }
+
+        return payload;
+    }
+
+    private String readUrlFromPayload(byte[] payload) throws ReadingTagException {
+        for(int i = 0; i < 32; i++) {
+            byte c = (byte) payload[i];
+            if (c == 0x0A) {
+                return new String(payload, 0, i);
+            }
+        }
+        throw new ReadingTagException("No new line character found.");
+    }
+
+    private String readNonceFromPayload(byte[] payload, int offset) {
+        return new String(payload, offset + 1, 31 - offset);
+    }
+
+    private byte[] genDigest(byte[] payload, int length) throws NoSuchAlgorithmException {
+        MessageDigest m = MessageDigest.getInstance("SHA-256");
+        m.update(payload, 0, 32);
+        if (length == 0) {
+            return m.digest();
+        }
+        byte[] digest = new byte[length];
+        System.arraycopy(m.digest(), 0, digest, 0, digest.length);
+        return digest;
+    }
+
+    private boolean verifySignature(byte[] payload) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+        byte[] digest = genDigest(payload, 5);
+        Signature signature = Signature.getInstance("NONEwithRSA");
+        signature.initVerify(publicKey);
+        signature.update(digest);
+        return signature.verify(payload, 32, payload.length - 32);
+    }
+
+    private PublicKey readPublicKey() throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
+        ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
+        InputStream input = this.getResources().openRawResource(R.raw.publickey);
+        int b;
+        while((b = input.read()) != -1) {
+            byteStream.write(b);
+        }
+
+        X509EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(byteStream.toByteArray());
+        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+        return keyFactory.generatePublic(publicKeySpec);
     }
 }

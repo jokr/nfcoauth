@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">OAuthDemo</string>
-    <string name="facebook_app_id">822526827860973</string>
+    <string name="facebook_app_id">713963108714453</string>
     <string name="loginCanceled">Login attempt canceled.</string>
     <string name="loginFailed">Login attempt failed.</string>
     <string name="loginSuccess">User ID: %1$s. Token: %2$s.</string>

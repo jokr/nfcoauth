@@ -15,7 +15,7 @@ import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-public class AuthWithDoorTask extends AsyncTask<LoginToken, Void, Boolean> {
+public class AuthWithDoorTask extends AsyncTask<DoorTaskParameter, Void, Boolean> {
     private static final String TAG = "AuthWithDoorTask";
     private final Activity activity;
 
@@ -24,29 +24,27 @@ public class AuthWithDoorTask extends AsyncTask<LoginToken, Void, Boolean> {
     }
 
     @Override
-    protected Boolean doInBackground(LoginToken... params) {
+    protected Boolean doInBackground(DoorTaskParameter... params) {
         if (params.length != 1) {
             return null;
         }
+        String server = params[0].url;
+        LoginToken token = params[0].token;
 
         HttpURLConnection urlConnection = null;
         try {
-            //URL url = new URL("http://10.0.0.212:8090/auth");
-            URL url = new URL("http://172.29.93.2:8090/auth");
+            URL url = new URL("http://" + server);
             Log.v(TAG, "Prepare connection: " + url.toString());
             urlConnection = (HttpURLConnection) url.openConnection();
             urlConnection.setRequestMethod("POST");
             urlConnection.setRequestProperty("Content-Type", "application/json");
             urlConnection.setDoOutput(true);
             urlConnection.connect();
-
             JSONObject user = new JSONObject();
-            // ToDO Update the userId Field
             user.put("userId", "");
-            user.put("token", params[0].getToken());
-            user.put("logintype", params[0].getLoginType());
-
-            Log.v(TAG, "Prepare post: " + user.toString());
+            user.put("token", token.getToken());
+            user.put("logintype", token.getLoginType());
+            Log.v(TAG, "Prepare payload: " + user.toString());
 
             OutputStreamWriter wr = new OutputStreamWriter(urlConnection.getOutputStream());
             wr.write(user.toString());
@@ -56,7 +54,7 @@ public class AuthWithDoorTask extends AsyncTask<LoginToken, Void, Boolean> {
             wr.close();
             return  retCode == 200;
         } catch (IOException | JSONException e) {
-            e.printStackTrace();
+            Log.e(TAG, "Error when sending post to server.", e);
             return false;
         } finally {
             if (urlConnection != null) {

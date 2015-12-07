@@ -31,42 +31,35 @@ public class SelectDomain extends AppCompatActivity implements
         View.OnClickListener,
         ActivityCompat.OnRequestPermissionsResultCallback,
         GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener{
+        GoogleApiClient.OnConnectionFailedListener {
 
     private static final String TAG = "SelectDomainActivity";
     private CallbackManager callbackManager;
 
     /* RequestCode for resolutions involving sign-in */
     private static final int RC_SIGN_IN = 1;
-
     /* RequestCode for resolutions to get GET_ACCOUNTS permission on M */
     private static final int RC_PERM_GET_ACCOUNTS = 2;
-
-    /* Client for accessing Google APIs */
     private GoogleApiClient mGoogleApiClient;
-
-    /* Is there a ConnectionResult resolution in progress? */
     private boolean mIsResolving = false;
-
-    /* Should we automatically resolve ConnectionResults when possible? */
     private boolean mShouldResolve = false;
-
     private LoginToken loginToken = new LoginToken();
 
+    private String url;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         FacebookSdk.sdkInitialize(getApplicationContext());
         setContentView(R.layout.select_domain);
+        TextView server = (TextView) findViewById(R.id.textView_server_url);
+        url = getIntent().getStringExtra("server");
+        server.setText(url);
         callbackManager = CallbackManager.Factory.create();
 
-        findViewById(R.id.button_unlock).setOnClickListener(this);
         findViewById(R.id.button_domain_google).setOnClickListener(this);
-
         ((SignInButton) findViewById(R.id.button_domain_google)).setSize(SignInButton.SIZE_WIDE);
 
-        // Set up Google API Client
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
@@ -76,12 +69,10 @@ public class SelectDomain extends AppCompatActivity implements
                 .build();
     }
 
-
     @Override
     protected void onStart() {
         super.onStart();
-        // Code borrowed from google login sample
-        if(loginToken.isLoggedIn()) {
+        if (loginToken.isLoggedIn()) {
             switch (loginToken.getLoginType()) {
                 case GOOGLE:
                     mGoogleApiClient.connect();
@@ -93,9 +84,7 @@ public class SelectDomain extends AppCompatActivity implements
     @Override
     protected void onStop() {
         super.onStop();
-
-        // Code borrowed from google login sample
-        if(loginToken.isLoggedIn()) {
+        if (loginToken.isLoggedIn()) {
             switch (loginToken.getLoginType()) {
                 case GOOGLE:
                     mGoogleApiClient.disconnect();
@@ -112,22 +101,17 @@ public class SelectDomain extends AppCompatActivity implements
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        // Both Google and Facebook Login will call this function. Use login type
-        // to distiguish each other
         switch (loginToken.getLoginType()) {
             case FACEBOOK:
                 callbackManager.onActivityResult(requestCode, resultCode, data);
                 AccessToken accessToken = AccessToken.getCurrentAccessToken();
 
-                // Set the login status to true only if we can get a valid token
-                if(accessToken.getToken() != null) {
+                if (accessToken.getToken() != null) {
                     loginToken.setToken(accessToken.getToken());
                     loginToken.setLoginStatus(true);
                 }
-                // User can switch account next time when he wants to login
                 LoginManager.getInstance().logOut();
-                // Update the UI after login
-                updateUI();
+                new AuthWithDoorTask(this).execute(new DoorTaskParameter(url, loginToken));
                 break;
             case GOOGLE:
                 // Code borrowed from Google's login sample
@@ -152,7 +136,7 @@ public class SelectDomain extends AppCompatActivity implements
                                            @NonNull int[] grantResults) {
         if (requestCode == RC_PERM_GET_ACCOUNTS) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                updateUI();
+                new AuthWithDoorTask(this).execute(new DoorTaskParameter(url, loginToken));
             } else {
                 Log.d(TAG, "GET_ACCOUNTS Permission Denied.");
             }
@@ -196,7 +180,7 @@ public class SelectDomain extends AppCompatActivity implements
                 updateUI();
             }
         };
-        task.execute((Void)null);
+        task.execute((Void) null);
     }
 
     /**
@@ -240,15 +224,9 @@ public class SelectDomain extends AppCompatActivity implements
             case R.id.button_domain_google:
                 onGoogleSignInClicked();
                 break;
-            case R.id.button_unlock:
-                unlock();
-                break;
         }
     }
 
-    /**
-     * Code borrowed from Google's Login sample with customization.
-     */
     private void onGoogleSignInClicked() {
         mShouldResolve = true;
         // Update the login type
@@ -258,9 +236,6 @@ public class SelectDomain extends AppCompatActivity implements
         mGoogleApiClient.connect();
     }
 
-    /**
-     * Request permission at runtime
-     */
     private void checkAccountsPermission() {
         final String perm = Manifest.permission.GET_ACCOUNTS;
         int permissionCheck = ContextCompat.checkSelfPermission(this, perm);
@@ -276,22 +251,11 @@ public class SelectDomain extends AppCompatActivity implements
         }
     }
 
-    /**
-     * If the user successfully logined, hide the login button, and show the unlock button
-     */
     void updateUI() {
-        if(loginToken.isLoggedIn()) {
+        if (loginToken.isLoggedIn()) {
             findViewById(R.id.button_domain_facebook).setVisibility(View.GONE);
             findViewById(R.id.button_domain_google).setVisibility(View.GONE);
-            findViewById(R.id.button_unlock).setVisibility(View.VISIBLE);
-            ((TextView)findViewById(R.id.textView_domain_instruction)).setText("Click to unlock the door");
         }
-    }
-
-    /**
-     * Handler for the unlock button
-     */
-    private void unlock() {
-        new AuthWithDoorTask(this).execute(loginToken);
+        new AuthWithDoorTask(this).execute(new DoorTaskParameter(url, loginToken));
     }
 }

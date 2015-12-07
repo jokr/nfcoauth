@@ -20,14 +20,14 @@ public class LoggedInActivity extends Activity {
         if(!authSuccess) {
             loggedIn.setBackgroundColor(getResources().getColor(R.color.red));
             loggedIn.setText("Login Failed. Please retry.");
-
-            new Handler().postDelayed(new Runnable() {
-                public void run() {
-                    Intent mainActivity = new Intent(LoggedInActivity.this, MainActivity.class);
-                    startActivity(mainActivity);
-                }
-            }, 5000);
         }
+
+        new Handler().postDelayed(new Runnable() {
+            public void run() {
+                Intent mainActivity = new Intent(LoggedInActivity.this, MainActivity.class);
+                startActivity(mainActivity);
+            }
+        }, 5000);
 
     }
 

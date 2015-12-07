@@ -51,23 +51,26 @@ public class AuthWithDoorTask extends AsyncTask<LoginToken, Void, Boolean> {
             OutputStreamWriter wr = new OutputStreamWriter(urlConnection.getOutputStream());
             wr.write(user.toString());
             wr.flush();
-            Log.v(TAG, "Sent post. Status Code: " + urlConnection.getResponseCode());
+            int retCode = urlConnection.getResponseCode();
+            Log.v(TAG, "Sent post. Status Code: " + retCode);
             wr.close();
+            return  retCode == 200;
         } catch (IOException | JSONException e) {
             e.printStackTrace();
-            return null;
+            return false;
         } finally {
             if (urlConnection != null) {
                 urlConnection.disconnect();
             }
         }
-        return true;
     }
 
     @Override
     protected void onPostExecute(Boolean result) {
-        Log.v(TAG, "Finished task, start new activity.");
+        Log.v(TAG, "Finished task, start new activity: " + result);
         activity.finish();
-        activity.startActivity(new Intent(activity, LoggedInActivity.class));
+        Intent intent = new Intent(activity, LoggedInActivity.class);
+        intent.putExtra("authSuccess", result);
+        activity.startActivity(intent);
     }
 }

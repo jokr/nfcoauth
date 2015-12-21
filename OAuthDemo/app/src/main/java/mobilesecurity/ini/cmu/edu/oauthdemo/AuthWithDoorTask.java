@@ -3,9 +3,13 @@ package mobilesecurity.ini.cmu.edu.oauthdemo;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.AsyncTask;
+import android.os.Bundle;
 import android.util.Log;
 
 import com.facebook.AccessToken;
+import com.facebook.GraphRequest;
+import com.facebook.GraphResponse;
+import com.facebook.HttpMethod;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -52,7 +56,7 @@ public class AuthWithDoorTask extends AsyncTask<DoorTaskParameter, Void, Boolean
             int retCode = urlConnection.getResponseCode();
             Log.v(TAG, "Sent post. Status Code: " + retCode);
             wr.close();
-            return  retCode == 200;
+            return retCode == 200;
         } catch (IOException | JSONException e) {
             Log.e(TAG, "Error when sending post to server.", e);
             return false;

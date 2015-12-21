@@ -7,6 +7,13 @@ import android.os.Handler;
 import android.view.View;
 import android.widget.TextView;
 
+import com.facebook.AccessToken;
+import com.facebook.FacebookSdk;
+import com.facebook.GraphRequest;
+import com.facebook.GraphResponse;
+import com.facebook.HttpMethod;
+import com.facebook.login.LoginManager;
+
 public class LoggedInActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -14,13 +21,17 @@ public class LoggedInActivity extends Activity {
         setContentView(R.layout.logged_in);
 
         TextView loggedIn = (TextView) findViewById(R.id.textView_logged_in);
+        TextView welcome = (TextView) findViewById(R.id.textView_welcome);
 
         Bundle bundle = getIntent().getExtras();
         boolean authSuccess = bundle.getBoolean("authSuccess");
-        if(!authSuccess) {
+        if (!authSuccess) {
             loggedIn.setBackgroundColor(getResources().getColor(R.color.red));
-            loggedIn.setText("Login Failed. Please retry.");
+            loggedIn.setText(R.string.failed);
         }
+
+        String name = bundle.getString("name", "Tatrick Pague");
+        welcome.setText(String.format(getString(R.string.welcomeName), name));
 
         new Handler().postDelayed(new Runnable() {
             public void run() {
@@ -29,11 +40,5 @@ public class LoggedInActivity extends Activity {
             }
         }, 5000);
 
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        finish();
     }
 }

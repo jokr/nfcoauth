@@ -23,6 +23,7 @@ app.get("/", (req, res, next) => {
 });
 
 app.post("/auth", (req, res, next) => {
+  console.log(req.body.token);
 	request(
 		getAuthURL(req.body.logintype) + req.body.token, (error, response, body) => {
 			if (error) {

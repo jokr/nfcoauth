@@ -15,5 +15,29 @@
         android:textAppearance="?android:attr/textAppearanceLarge"
         android:textColor="#ffffff"
         android:layout_alignParentEnd="true"
-        android:layout_alignParentStart="true" />
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="50dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="@string/welcomeName"
+        android:id="@+id/textView_welcome"
+        android:layout_below="@+id/textView_logged_in"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="40dp"
+        android:padding="10dp"
+        android:layout_alignParentEnd="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="@string/loginAccess"
+        android:id="@+id/textView_welcome2"
+        android:layout_below="@+id/textView_welcome"
+        android:layout_alignParentStart="true"
+        android:padding="10dp"
+        android:layout_alignParentEnd="true" />
 </RelativeLayout>

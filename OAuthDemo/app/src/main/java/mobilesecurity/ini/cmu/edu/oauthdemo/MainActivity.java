@@ -64,6 +64,11 @@ public class MainActivity extends Activity {
                 }
             });
         }
+
+        Tag tag = getIntent().getParcelableExtra(NfcAdapter.EXTRA_TAG);
+        if (tag != null) {
+            handleTag(tag);
+        }
     }
 
     private void handleTag(Tag tag) {
